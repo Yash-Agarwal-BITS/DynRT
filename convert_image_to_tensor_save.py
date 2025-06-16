@@ -62,7 +62,7 @@ if __name__ == "__main__":
             img = Image.open(img_path)
             img = img.convert('RGB') # convert grey picture
             trainsform_img = transform[mode](img)
-            image_tensor[mode].append(trainsform_img.unsqueeze(0))
+#            image_tensor[mode].append(trainsform_img.unsqueeze(0))
             np.save(save_path + str(idx) + '.npy', trainsform_img.numpy())
             
 

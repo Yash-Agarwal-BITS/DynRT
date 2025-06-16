@@ -1,0 +1,226 @@
+2025-06-13 06:18:28,301 - __main__ - INFO - start logging : {"fname": "./exp/06-13-06_18_28/log.txt", "level": "INFO", "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"}
+2025-06-13 06:18:28,301 - __main__ - INFO - info: {"name": "DynRT", "log": {"name": ""}, "device": [0], "test_on_checkpoint": "none", "train_on_checkpoint": "none"}
+2025-06-13 06:18:28,302 - __main__ - INFO - Set Seed : 2
+2025-06-13 06:18:28,302 - __main__ - INFO - Require : ['tokenizer_roberta']
+2025-06-13 06:18:28,369 - __main__ - INFO - Loaded tokenizer_roberta : {"path": "pretrained_models/roberta-base"}
+2025-06-13 06:18:32,312 - __main__ - INFO - Prepared text : {"data_path": "input/prepared_clean/", "len": 100, "pad": 1}
+2025-06-13 06:18:32,319 - __main__ - INFO - Prepared img : {"data_path": "input/prepared_clean/", "transform_image": "image_tensor/"}
+2025-06-13 06:18:32,321 - __main__ - INFO - Prepared label : {"data_path": "input/prepared_clean/", "test_label": true}
+2025-06-13 06:18:32,321 - __main__ - INFO - Created DataLoaders : {"batch_size": 32, "pin_memory": true, "num_workers": 0, "shuffle": true}
+2025-06-13 06:18:35,149 - __main__ - INFO - load model none
+2025-06-13 06:18:35,149 - __main__ - INFO - Created Model : {"name": "DynRT", "input1": "text", "input2": "img", "input3": "text_mask", "layer": 4, "tau_max": 10, "ORDERS": [0, 1, 2, 3], "IMG_SCALE": 7, "dropout": 0.5, "hidden_size": 768, "ffn_size": 768, "multihead": 2, "routing": "hard", "BINARIZE": false, "len": 100, "glimpses": 1, "mlp_size": 768, "output_size": 768, "orders": 4, "pooling": "avg", "classifier": "both", "roberta_path": "pretrained_models/roberta-base/", "roberta_layer": 1, "vitmodel": "vit_base_patch32_224", "finetune": false}
+2025-06-13 06:18:35,152 - __main__ - INFO - Created Optimizer : {"name": "Adam", "lr": 1e-06, "weight_decay": 0.01, "params": {"bertl_text": {"lr": 3e-07}, "vit": {"lr": 3e-07, "weight_decay": 0.01}, "trar": {"lr": 1e-06, "weight_decay": 0.01}, "classifier": {}}}
+2025-06-13 06:18:35,152 - __main__ - INFO - Created Loss : {"name": "CrossEntropyLoss"}
+2025-06-13 06:18:36,544 - __main__ - INFO - Model To Device : cuda:0
+2025-06-13 06:18:36,544 - __main__ - INFO - loss To Device : cuda:0
+2025-06-13 06:18:36,544 - __main__ - INFO - Clip: 10
+2025-06-13 06:18:36,549 - __main__ - INFO - Epoch 1/15
+2025-06-13 06:22:48,804 - __main__ - INFO - [[8245 2925]
+ [4620 3762]]
+2025-06-13 06:22:48,805 - __main__ - INFO - train : F1: 0.5927, Precision: 0.6017, Recall : 0.5935, Accuracy: 0.6141, Loss: 0.6649.
+2025-06-13 06:23:04,762 - __main__ - INFO - [[1218  232]
+ [ 605  332]]
+2025-06-13 06:23:04,763 - __main__ - INFO - valid: F1: 0.4424, Precision: 0.5887, Recall : 0.3543, Accuracy: 0.6494, Loss: 0.6350.
+2025-06-13 06:23:04,763 - __main__ - INFO - valid-macro: F1: 0.5933, Precision: 0.6284, Recall : 0.5972.
+2025-06-13 06:23:04,763 - __main__ - INFO - save best model for now, epoch:1
+2025-06-13 06:23:19,099 - __main__ - INFO - [[1235  213]
+ [ 566  359]]
+2025-06-13 06:23:19,101 - __main__ - INFO - test: F1: 0.4796, Precision: 0.6276, Recall : 0.3881, Accuracy: 0.6717, Loss: 0.6226.
+2025-06-13 06:23:19,101 - __main__ - INFO - test-macro: F1: 0.6199, Precision: 0.6567, Recall : 0.6205.
+2025-06-13 06:23:19,103 - __main__ - INFO - Epoch 2/15
+2025-06-13 06:27:25,316 - __main__ - INFO - [[8728 2443]
+ [3867 4514]]
+2025-06-13 06:27:25,318 - __main__ - INFO - train : F1: 0.6615, Precision: 0.6709, Recall : 0.6600, Accuracy: 0.6773, Loss: 0.6291.
+2025-06-13 06:27:38,419 - __main__ - INFO - [[1143  307]
+ [ 480  457]]
+2025-06-13 06:27:38,419 - __main__ - INFO - valid: F1: 0.5373, Precision: 0.5982, Recall : 0.4877, Accuracy: 0.6703, Loss: 0.6193.
+2025-06-13 06:27:38,419 - __main__ - INFO - valid-macro: F1: 0.6406, Precision: 0.6512, Recall : 0.6380.
+2025-06-13 06:27:38,420 - __main__ - INFO - save best model for now, epoch:2
+2025-06-13 06:27:55,531 - __main__ - INFO - [[1154  294]
+ [ 443  482]]
+2025-06-13 06:27:55,534 - __main__ - INFO - test: F1: 0.5667, Precision: 0.6211, Recall : 0.5211, Accuracy: 0.6894, Loss: 0.6040.
+2025-06-13 06:27:55,534 - __main__ - INFO - test-macro: F1: 0.6623, Precision: 0.6719, Recall : 0.6590.
+2025-06-13 06:27:55,536 - __main__ - INFO - Epoch 3/15
+2025-06-13 06:32:06,187 - __main__ - INFO - [[8518 2653]
+ [3358 5023]]
+2025-06-13 06:32:06,191 - __main__ - INFO - train : F1: 0.6824, Precision: 0.6858, Recall : 0.6809, Accuracy: 0.6926, Loss: 0.6122.
+2025-06-13 06:32:20,616 - __main__ - INFO - [[1111  339]
+ [ 449  488]]
+2025-06-13 06:32:20,616 - __main__ - INFO - valid: F1: 0.5533, Precision: 0.5901, Recall : 0.5208, Accuracy: 0.6699, Loss: 0.6125.
+2025-06-13 06:32:20,617 - __main__ - INFO - valid-macro: F1: 0.6457, Precision: 0.6511, Recall : 0.6435.
+2025-06-13 06:32:20,617 - __main__ - INFO - save best model for now, epoch:3
+2025-06-13 06:32:36,705 - __main__ - INFO - [[1120  328]
+ [ 396  529]]
+2025-06-13 06:32:36,710 - __main__ - INFO - test: F1: 0.5937, Precision: 0.6173, Recall : 0.5719, Accuracy: 0.6949, Loss: 0.5957.
+2025-06-13 06:32:36,710 - __main__ - INFO - test-macro: F1: 0.6747, Precision: 0.6780, Recall : 0.6727.
+2025-06-13 06:32:36,712 - __main__ - INFO - Epoch 4/15
+2025-06-13 06:36:46,708 - __main__ - INFO - [[8485 2684]
+ [3157 5226]]
+2025-06-13 06:36:46,711 - __main__ - INFO - train : F1: 0.6927, Precision: 0.6948, Recall : 0.6915, Accuracy: 0.7013, Loss: 0.6025.
+2025-06-13 06:37:02,391 - __main__ - INFO - [[1085  365]
+ [ 397  540]]
+2025-06-13 06:37:02,392 - __main__ - INFO - valid: F1: 0.5863, Precision: 0.5967, Recall : 0.5763, Accuracy: 0.6808, Loss: 0.6092.
+2025-06-13 06:37:02,392 - __main__ - INFO - valid-macro: F1: 0.6632, Precision: 0.6644, Recall : 0.6623.
+2025-06-13 06:37:02,392 - __main__ - INFO - save best model for now, epoch:4
+2025-06-13 06:37:16,971 - __main__ - INFO - [[1081  367]
+ [ 360  565]]
+2025-06-13 06:37:16,974 - __main__ - INFO - test: F1: 0.6085, Precision: 0.6062, Recall : 0.6108, Accuracy: 0.6936, Loss: 0.5915.
+2025-06-13 06:37:16,974 - __main__ - INFO - test-macro: F1: 0.6784, Precision: 0.6782, Recall : 0.6787.
+2025-06-13 06:37:16,975 - __main__ - INFO - Epoch 5/15
+2025-06-13 06:41:27,103 - __main__ - INFO - [[8420 2747]
+ [2997 5388]]
+2025-06-13 06:41:27,106 - __main__ - INFO - train : F1: 0.6990, Precision: 0.6999, Recall : 0.6983, Accuracy: 0.7062, Loss: 0.5958.
+2025-06-13 06:41:41,204 - __main__ - INFO - [[1096  354]
+ [ 394  543]]
+2025-06-13 06:41:41,204 - __main__ - INFO - valid: F1: 0.5921, Precision: 0.6054, Recall : 0.5795, Accuracy: 0.6866, Loss: 0.6046.
+2025-06-13 06:41:41,204 - __main__ - INFO - valid-macro: F1: 0.6689, Precision: 0.6705, Recall : 0.6677.
+2025-06-13 06:41:41,204 - __main__ - INFO - save best model for now, epoch:5
+2025-06-13 06:41:58,473 - __main__ - INFO - [[1090  358]
+ [ 360  565]]
+2025-06-13 06:41:58,477 - __main__ - INFO - test: F1: 0.6115, Precision: 0.6121, Recall : 0.6108, Accuracy: 0.6974, Loss: 0.5869.
+2025-06-13 06:41:58,477 - __main__ - INFO - test-macro: F1: 0.6819, Precision: 0.6819, Recall : 0.6818.
+2025-06-13 06:41:58,478 - __main__ - INFO - Epoch 6/15
+2025-06-13 06:46:01,664 - __main__ - INFO - [[8410 2761]
+ [2936 5445]]
+2025-06-13 06:46:01,667 - __main__ - INFO - train : F1: 0.7018, Precision: 0.7024, Recall : 0.7013, Accuracy: 0.7086, Loss: 0.5914.
+2025-06-13 06:46:16,981 - __main__ - INFO - [[1093  357]
+ [ 379  558]]
+2025-06-13 06:46:16,981 - __main__ - INFO - valid: F1: 0.6026, Precision: 0.6098, Recall : 0.5955, Accuracy: 0.6917, Loss: 0.6009.
+2025-06-13 06:46:16,981 - __main__ - INFO - valid-macro: F1: 0.6754, Precision: 0.6762, Recall : 0.6747.
+2025-06-13 06:46:16,981 - __main__ - INFO - save best model for now, epoch:6
+2025-06-13 06:46:31,610 - __main__ - INFO - [[1084  364]
+ [ 347  578]]
+2025-06-13 06:46:31,613 - __main__ - INFO - test: F1: 0.6192, Precision: 0.6136, Recall : 0.6249, Accuracy: 0.7004, Loss: 0.5832.
+2025-06-13 06:46:31,613 - __main__ - INFO - test-macro: F1: 0.6861, Precision: 0.6856, Recall : 0.6867.
+2025-06-13 06:46:31,614 - __main__ - INFO - Epoch 7/15
+2025-06-13 06:50:32,880 - __main__ - INFO - [[8450 2719]
+ [2864 5519]]
+2025-06-13 06:50:32,882 - __main__ - INFO - train : F1: 0.7079, Precision: 0.7084, Recall : 0.7075, Accuracy: 0.7145, Loss: 0.5861.
+2025-06-13 06:50:48,212 - __main__ - INFO - [[1087  363]
+ [ 364  573]]
+2025-06-13 06:50:48,212 - __main__ - INFO - valid: F1: 0.6119, Precision: 0.6122, Recall : 0.6115, Accuracy: 0.6954, Loss: 0.5968.
+2025-06-13 06:50:48,212 - __main__ - INFO - valid-macro: F1: 0.6806, Precision: 0.6807, Recall : 0.6806.
+2025-06-13 06:50:48,213 - __main__ - INFO - save best model for now, epoch:7
+2025-06-13 06:51:02,250 - __main__ - INFO - [[1078  370]
+ [ 333  592]]
+2025-06-13 06:51:02,253 - __main__ - INFO - test: F1: 0.6275, Precision: 0.6154, Recall : 0.6400, Accuracy: 0.7038, Loss: 0.5793.
+2025-06-13 06:51:02,253 - __main__ - INFO - test-macro: F1: 0.6908, Precision: 0.6897, Recall : 0.6922.
+2025-06-13 06:51:02,255 - __main__ - INFO - Epoch 8/15
+2025-06-13 06:55:03,627 - __main__ - INFO - [[8496 2673]
+ [2784 5599]]
+2025-06-13 06:55:03,629 - __main__ - INFO - train : F1: 0.7146, Precision: 0.7150, Recall : 0.7143, Accuracy: 0.7209, Loss: 0.5808.
+2025-06-13 06:55:19,563 - __main__ - INFO - [[1093  357]
+ [ 353  584]]
+2025-06-13 06:55:19,564 - __main__ - INFO - valid: F1: 0.6219, Precision: 0.6206, Recall : 0.6233, Accuracy: 0.7026, Loss: 0.5909.
+2025-06-13 06:55:19,564 - __main__ - INFO - valid-macro: F1: 0.6884, Precision: 0.6882, Recall : 0.6885.
+2025-06-13 06:55:19,564 - __main__ - INFO - save best model for now, epoch:8
+2025-06-13 06:55:34,153 - __main__ - INFO - [[1082  366]
+ [ 321  604]]
+2025-06-13 06:55:34,156 - __main__ - INFO - test: F1: 0.6375, Precision: 0.6227, Recall : 0.6530, Accuracy: 0.7105, Loss: 0.5738.
+2025-06-13 06:55:34,156 - __main__ - INFO - test-macro: F1: 0.6982, Precision: 0.6969, Recall : 0.7001.
+2025-06-13 06:55:34,157 - __main__ - INFO - Epoch 9/15
+2025-06-13 06:59:38,918 - __main__ - INFO - [[8576 2595]
+ [2730 5651]]
+2025-06-13 06:59:38,920 - __main__ - INFO - train : F1: 0.7214, Precision: 0.7219, Recall : 0.7210, Accuracy: 0.7276, Loss: 0.5750.
+2025-06-13 06:59:54,190 - __main__ - INFO - [[1071  379]
+ [ 319  618]]
+2025-06-13 06:59:54,190 - __main__ - INFO - valid: F1: 0.6391, Precision: 0.6199, Recall : 0.6596, Accuracy: 0.7076, Loss: 0.5839.
+2025-06-13 06:59:54,190 - __main__ - INFO - valid-macro: F1: 0.6967, Precision: 0.6952, Recall : 0.6991.
+2025-06-13 06:59:54,191 - __main__ - INFO - save best model for now, epoch:9
+2025-06-13 07:00:08,530 - __main__ - INFO - [[1066  382]
+ [ 273  652]]
+2025-06-13 07:00:08,534 - __main__ - INFO - test: F1: 0.6656, Precision: 0.6306, Recall : 0.7049, Accuracy: 0.7240, Loss: 0.5676.
+2025-06-13 07:00:08,534 - __main__ - INFO - test-macro: F1: 0.7153, Precision: 0.7133, Recall : 0.7205.
+2025-06-13 07:00:08,535 - __main__ - INFO - Epoch 10/15
+2025-06-13 07:04:13,479 - __main__ - INFO - [[8699 2469]
+ [2598 5786]]
+2025-06-13 07:04:13,480 - __main__ - INFO - train : F1: 0.7350, Precision: 0.7355, Recall : 0.7345, Accuracy: 0.7408, Loss: 0.5659.
+2025-06-13 07:04:26,309 - __main__ - INFO - [[1108  342]
+ [ 293  644]]
+2025-06-13 07:04:26,309 - __main__ - INFO - valid: F1: 0.6698, Precision: 0.6531, Recall : 0.6873, Accuracy: 0.7340, Loss: 0.5653.
+2025-06-13 07:04:26,309 - __main__ - INFO - valid-macro: F1: 0.7235, Precision: 0.7220, Recall : 0.7257.
+2025-06-13 07:04:26,310 - __main__ - INFO - save best model for now, epoch:10
+2025-06-13 07:04:43,249 - __main__ - INFO - [[1097  351]
+ [ 257  668]]
+2025-06-13 07:04:43,253 - __main__ - INFO - test: F1: 0.6872, Precision: 0.6555, Recall : 0.7222, Accuracy: 0.7438, Loss: 0.5509.
+2025-06-13 07:04:43,253 - __main__ - INFO - test-macro: F1: 0.7351, Precision: 0.7329, Recall : 0.7399.
+2025-06-13 07:04:43,254 - __main__ - INFO - Epoch 11/15
+2025-06-13 07:08:48,169 - __main__ - INFO - [[9018 2151]
+ [2297 6086]]
+2025-06-13 07:08:48,171 - __main__ - INFO - train : F1: 0.7673, Precision: 0.7679, Recall : 0.7667, Accuracy: 0.7725, Loss: 0.5405.
+2025-06-13 07:09:00,967 - __main__ - INFO - [[1185  265]
+ [ 148  789]]
+2025-06-13 07:09:00,967 - __main__ - INFO - valid: F1: 0.7926, Precision: 0.7486, Recall : 0.8420, Accuracy: 0.8270, Loss: 0.4846.
+2025-06-13 07:09:00,967 - __main__ - INFO - valid-macro: F1: 0.8221, Precision: 0.8188, Recall : 0.8296.
+2025-06-13 07:09:00,967 - __main__ - INFO - save best model for now, epoch:11
+2025-06-13 07:09:18,197 - __main__ - INFO - [[1182  266]
+ [ 123  802]]
+2025-06-13 07:09:18,202 - __main__ - INFO - test: F1: 0.8048, Precision: 0.7509, Recall : 0.8670, Accuracy: 0.8361, Loss: 0.4804.
+2025-06-13 07:09:18,202 - __main__ - INFO - test-macro: F1: 0.8318, Precision: 0.8283, Recall : 0.8417.
+2025-06-13 07:09:18,203 - __main__ - INFO - Epoch 12/15
+2025-06-13 07:13:24,333 - __main__ - INFO - [[10547   623]
+ [  842  7540]]
+2025-06-13 07:13:24,335 - __main__ - INFO - train : F1: 0.9233, Precision: 0.9249, Recall : 0.9219, Accuracy: 0.9251, Loss: 0.4207.
+2025-06-13 07:13:37,414 - __main__ - INFO - [[1372   78]
+ [  41  896]]
+2025-06-13 07:13:37,415 - __main__ - INFO - valid: F1: 0.9377, Precision: 0.9199, Recall : 0.9562, Accuracy: 0.9501, Loss: 0.3698.
+2025-06-13 07:13:37,415 - __main__ - INFO - valid-macro: F1: 0.9481, Precision: 0.9455, Recall : 0.9512.
+2025-06-13 07:13:37,415 - __main__ - INFO - save best model for now, epoch:12
+2025-06-13 07:13:52,161 - __main__ - INFO - [[1351   97]
+ [  59  866]]
+2025-06-13 07:13:52,165 - __main__ - INFO - test: F1: 0.9174, Precision: 0.8993, Recall : 0.9362, Accuracy: 0.9343, Loss: 0.3824.
+2025-06-13 07:13:52,165 - __main__ - INFO - test-macro: F1: 0.9314, Precision: 0.9287, Recall : 0.9346.
+2025-06-13 07:13:52,167 - __main__ - INFO - Epoch 13/15
+2025-06-13 07:17:58,078 - __main__ - INFO - [[11049   121]
+ [  265  8117]]
+2025-06-13 07:17:58,080 - __main__ - INFO - train : F1: 0.9798, Precision: 0.9809, Recall : 0.9788, Accuracy: 0.9803, Loss: 0.3512.
+2025-06-13 07:18:13,524 - __main__ - INFO - [[1374   76]
+ [  41  896]]
+2025-06-13 07:18:13,524 - __main__ - INFO - valid: F1: 0.9387, Precision: 0.9218, Recall : 0.9562, Accuracy: 0.9510, Loss: 0.3634.
+2025-06-13 07:18:13,524 - __main__ - INFO - valid-macro: F1: 0.9489, Precision: 0.9464, Recall : 0.9519.
+2025-06-13 07:18:13,524 - __main__ - INFO - save best model for now, epoch:13
+2025-06-13 07:18:28,220 - __main__ - INFO - [[1355   93]
+ [  59  866]]
+2025-06-13 07:18:28,222 - __main__ - INFO - test: F1: 0.9193, Precision: 0.9030, Recall : 0.9362, Accuracy: 0.9359, Loss: 0.3766.
+2025-06-13 07:18:28,222 - __main__ - INFO - test-macro: F1: 0.9331, Precision: 0.9306, Recall : 0.9360.
+2025-06-13 07:18:28,224 - __main__ - INFO - Epoch 14/15
+2025-06-13 07:22:33,748 - __main__ - INFO - [[11056   112]
+ [  245  8139]]
+2025-06-13 07:22:33,751 - __main__ - INFO - train : F1: 0.9813, Precision: 0.9824, Recall : 0.9804, Accuracy: 0.9817, Loss: 0.3424.
+2025-06-13 07:22:49,149 - __main__ - INFO - [[1376   74]
+ [  41  896]]
+2025-06-13 07:22:49,149 - __main__ - INFO - valid: F1: 0.9397, Precision: 0.9237, Recall : 0.9562, Accuracy: 0.9518, Loss: 0.3624.
+2025-06-13 07:22:49,149 - __main__ - INFO - valid-macro: F1: 0.9498, Precision: 0.9474, Recall : 0.9526.
+2025-06-13 07:22:49,149 - __main__ - INFO - save best model for now, epoch:14
+2025-06-13 07:23:03,808 - __main__ - INFO - [[1355   93]
+ [  59  866]]
+2025-06-13 07:23:03,811 - __main__ - INFO - test: F1: 0.9193, Precision: 0.9030, Recall : 0.9362, Accuracy: 0.9359, Loss: 0.3757.
+2025-06-13 07:23:03,811 - __main__ - INFO - test-macro: F1: 0.9331, Precision: 0.9306, Recall : 0.9360.
+2025-06-13 07:23:03,812 - __main__ - INFO - Epoch 15/15
+2025-06-13 07:27:09,207 - __main__ - INFO - [[11060   110]
+ [  227  8155]]
+2025-06-13 07:27:09,209 - __main__ - INFO - train : F1: 0.9824, Precision: 0.9833, Recall : 0.9815, Accuracy: 0.9828, Loss: 0.3396.
+2025-06-13 07:27:22,025 - __main__ - INFO - [[1376   74]
+ [  41  896]]
+2025-06-13 07:27:22,025 - __main__ - INFO - valid: F1: 0.9397, Precision: 0.9237, Recall : 0.9562, Accuracy: 0.9518, Loss: 0.3617.
+2025-06-13 07:27:22,025 - __main__ - INFO - valid-macro: F1: 0.9498, Precision: 0.9474, Recall : 0.9526.
+2025-06-13 07:27:22,025 - __main__ - INFO - save best model for now, epoch:15
+2025-06-13 07:27:38,906 - __main__ - INFO - [[1355   93]
+ [  59  866]]
+2025-06-13 07:27:38,916 - __main__ - INFO - test: F1: 0.9193, Precision: 0.9030, Recall : 0.9362, Accuracy: 0.9359, Loss: 0.3751.
+2025-06-13 07:27:38,917 - __main__ - INFO - test-macro: F1: 0.9331, Precision: 0.9306, Recall : 0.9360.
+2025-06-13 09:02:01,496 - __main__ - INFO - start logging : {"fname": "./exp/06-13-06_18_28/log.txt", "level": "INFO", "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"}
+2025-06-13 09:02:01,496 - __main__ - INFO - info: {"name": "DynRT", "log": {"name": ""}, "device": [0], "test_on_checkpoint": "exp/06-13-06_18_28/checkpoints/model_best.pth.tar", "train_on_checkpoint": "none"}
+2025-06-13 09:02:01,497 - __main__ - INFO - Require : ['tokenizer_roberta']
+2025-06-13 09:02:08,458 - __main__ - INFO - Loaded tokenizer_roberta : {"path": "roberta-base"}
+2025-06-13 09:02:12,512 - __main__ - INFO - Prepared text : {"data_path": "input/prepared_clean/", "len": 100, "pad": 1}
+2025-06-13 09:02:12,527 - __main__ - INFO - Prepared img : {"data_path": "input/prepared_clean/", "transform_image": "image_tensor/"}
+2025-06-13 09:02:12,528 - __main__ - INFO - Prepared label : {"data_path": "input/prepared_clean/", "test_label": true}
+2025-06-13 09:02:12,529 - __main__ - INFO - Created DataLoaders : {"batch_size": 32, "pin_memory": true, "num_workers": 0, "shuffle": true, "drop_last": true}
+2025-06-13 09:02:43,297 - __main__ - INFO - load model exp/06-13-06_18_28/checkpoints/model_best.pth.tar
+2025-06-13 09:02:43,297 - __main__ - INFO - Created Model : {"name": "DynRT", "input1": "text", "input2": "img", "input3": "text_mask", "layer": 4, "tau_max": 10, "ORDERS": [0, 1, 2, 3], "IMG_SCALE": 7, "dropout": 0.5, "hidden_size": 768, "ffn_size": 768, "multihead": 2, "routing": "hard", "BINARIZE": false, "len": 100, "glimpses": 1, "mlp_size": 768, "output_size": 768, "orders": 4, "pooling": "avg", "classifier": "both", "roberta_path": "roberta-base", "roberta_layer": 1, "vitmodel": "vit_base_patch32_224", "finetune": false}
+2025-06-13 09:02:43,496 - __main__ - INFO - Model To Device : cuda:0
+2025-06-13 09:02:43,496 - __main__ - INFO - loss To Device : cuda:0
+2025-06-13 09:02:57,731 - __main__ - INFO - [[1355   93]
+ [  59  866]]
+2025-06-13 09:02:57,731 - __main__ - INFO - test: F1: 0.9193, Precision: 0.9030, Recall : 0.9362, Accuracy: 0.9359, Loss: 0.3751.

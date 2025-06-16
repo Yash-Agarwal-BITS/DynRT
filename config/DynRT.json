@@ -15,7 +15,7 @@
         "dataloader": {
             "requires": {
                 "tokenizer_roberta": {
-                    "path": "roberta-base/"
+                    "path": "pretrained_models/roberta-base"
                 }
             },
             "loaders": {
@@ -71,7 +71,7 @@
             "orders": 4,
             "pooling": "avg",
             "classifier": "both",
-            "roberta_path": "roberta-base/",
+            "roberta_path": "pretrained_models/roberta-base/",
             "roberta_layer": 1,
             "vitmodel": "vit_base_patch32_224",
             "finetune": false

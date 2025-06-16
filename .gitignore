@@ -1,0 +1,9 @@
+
+dataset_image/
+image_tensor/
+
+dataset_image/
+image_tensor/
+pretrained_models/
+__pycache__/
+*.save

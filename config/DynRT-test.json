@@ -2,12 +2,12 @@
     "info": {
         "name": "DynRT",
         "log": {
-            "name": ""
+            "name": "Test-june13"
         },
         "device": [
             0
         ],
-        "test_on_checkpoint": "checkpoints/model_best.pth.tar",
+        "test_on_checkpoint": "exp/06-13-06_18_28/checkpoints/model_best.pth.tar",
         "train_on_checkpoint": "none"
     },
     "opt": {
