@@ -7,3 +7,4 @@ image_tensor/
 pretrained_models/
 __pycache__/
 *.save
+exp/*/checkpoints/*.pth.tar
