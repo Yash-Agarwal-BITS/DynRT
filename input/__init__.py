@@ -1,19 +1,21 @@
-from input.loader_text import loader_text
-from input.loader_label import loader_label
-from input.requires import get_tokenizer_roberta,get_tokenizer_bert
-from input.loader_img import loader_img
-_loaders=[
-    loader_text(),
-    loader_label(),
-    loader_img()
+# DynRT/input/__init__.py
+
+# Only import your unified JSON‐based loader and the tokenizer hooks
+from .json_mmsd_loader import JSONMMSDLoader
+from .requires         import get_tokenizer_roberta, get_tokenizer_bert
+
+# Instantiate three roles: text, img, and label
+_loaders = [
+    JSONMMSDLoader("text"),
+    JSONMMSDLoader("img"),
+    JSONMMSDLoader("label"),
 ]
-_requires={
-    "tokenizer_roberta":get_tokenizer_roberta,
-    "tokenizer_bert":get_tokenizer_bert,
+
+# These get passed into each loader during prepare()
+_requires = {
+    "tokenizer_roberta": get_tokenizer_roberta,
+    "tokenizer_bert":    get_tokenizer_bert,
 }
 
-_loadermap={}
-
-for loader in _loaders:
-    _loadermap[loader.name]=loader
-
+# Build the name→loader lookup map automatically
+_loadermap = { loader.name: loader for loader in _loaders }

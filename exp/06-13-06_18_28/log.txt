@@ -224,3 +224,8 @@
 2025-06-13 09:02:57,731 - __main__ - INFO - [[1355   93]
  [  59  866]]
 2025-06-13 09:02:57,731 - __main__ - INFO - test: F1: 0.9193, Precision: 0.9030, Recall : 0.9362, Accuracy: 0.9359, Loss: 0.3751.
+2025-06-23 22:31:50,335 - __main__ - INFO - start logging : {"fname": "./exp/06-13-06_18_28/log.txt", "level": "INFO", "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"}
+2025-06-23 22:31:50,335 - __main__ - INFO - info: {"name": "DynRT", "log": {"name": "Test-june13"}, "device": [0], "test_on_checkpoint": "exp/06-13-06_18_28/checkpoints/model_best.pth.tar", "train_on_checkpoint": "none"}
+2025-06-23 22:31:50,335 - __main__ - INFO - Require : ['tokenizer_roberta']
+2025-06-23 22:31:59,638 - __main__ - INFO - Loaded tokenizer_roberta : {"path": "roberta-base"}
+2025-06-23 22:31:59,664 - __main__ - INFO - Prepared text : {"data_path": "input/text_json_final/"}

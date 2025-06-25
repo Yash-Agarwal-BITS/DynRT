@@ -1,10 +1,19 @@
-
+# Raw image data and precomputed tensors
 dataset_image/
 image_tensor/
 
-dataset_image/
-image_tensor/
+# Local pretrained weights
 pretrained_models/
+
+# Python bytecode
 __pycache__/
+*.py[cod]
+
+# Experiment outputs (checkpoints still ignored)
+exp/**/checkpoints/*.pth.tar
+# exp/**/runs/
+# exp/**/log.txt
+
+# Miscellaneous
 *.save
-exp/*/checkpoints/*.pth.tar
+*.log
