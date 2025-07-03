@@ -5,7 +5,7 @@
       "name": "Train-mmsd2"
     },
     "device": [0],
-    "test_on_checkpoint": "none",
+    "test_on_checkpoint": "exp/06-24-11_51_33/checkpoints/model_best.pth.tar",
     "train_on_checkpoint": "none"
   },
   "opt": {
@@ -44,7 +44,7 @@
       "input3": "text_mask",
       "layer": 4,
       "tau_max": 10,
-      "ORDERS": [0, 1, 2, 3],
+      "ORDERS": [1, 2, 3, 4],
       "IMG_SCALE": 7,
       "dropout": 0.5,
       "hidden_size": 768,
@@ -62,7 +62,21 @@
       "roberta_path": "./pretrained_models/roberta-base",
       "roberta_layer": 1,
       "vitmodel": "vit_base_patch32_224",
-      "finetune": false
+      "finetune": false,
+      "att1": {
+        "multi_head": 2,
+        "hidden_size_v": 384,
+        "hidden_size_k": 384,
+        "hidden_size_q": 384,
+        "dropout": 0.5
+      },
+      "att2": {
+        "multi_head": 2,
+        "hidden_size_v": 384,
+        "hidden_size_k": 384,
+        "hidden_size_q": 384,
+        "dropout": 0.5
+      }
     },
     "optimizeropt": {
       "name": "Adam",

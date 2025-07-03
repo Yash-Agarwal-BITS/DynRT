@@ -1,26 +1,17 @@
+# model/TRAR/trar.py
+
 from model.TRAR.fc import MLP
 import copy
-
 from model.TRAR.layer_norm import LayerNorm
-
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
 import math
 import numpy as np
 
-# code based no from Phil Wang, thanks
-
 class SoftRoutingBlock(nn.Module):
     def __init__(self, in_channel, out_channel, pooling='attention', reduction=2):
         super(SoftRoutingBlock, self).__init__()
-        self.pooling = pooling
-
-        if pooling == 'avg':
-            self.pool = nn.AdaptiveAvgPool1d(1)
-        elif pooling == 'fc':
-            self.pool = nn.Linear(in_channel, 1)
-
         self.mlp = nn.Sequential(
             nn.Linear(in_channel, in_channel // reduction, bias=False),
             nn.ReLU(inplace=True),
@@ -28,373 +19,136 @@ class SoftRoutingBlock(nn.Module):
         )
 
     def forward(self, x, tau, masks):
-        if self.pooling == 'avg':
-            x = x.transpose(1, 2)
-            x = self.pool(x)
-            logits = self.mlp(x.squeeze(-1))
-        elif self.pooling == 'fc':
-            b, _, c = x.size()
-            mask = self.make_mask(x).squeeze(1).squeeze(1).unsqueeze(2) # (8, 1, 1, 49) -> (8, 49, 1)
-            scores = self.pool(x) # (8, 49, 1)
-            scores = scores.masked_fill(mask, -1e9)
-            scores = F.softmax(scores, dim=1)
-            _x = x.mul(scores)
-            x = torch.sum(_x, dim=1)
-            logits = self.mlp(x)
-            
-        alpha = F.softmax(logits, dim=-1)  #
-        return alpha
+        logits = self.mlp(x)
+        alpha = F.gumbel_softmax(logits, tau=tau, hard=False)
+        y = torch.bmm(alpha.unsqueeze(1), masks.float())
+        return y, alpha
 
-    def make_mask(self, feature):
-        return (torch.sum(
-            torch.abs(feature),
-            dim=-1
-        ) == 0).unsqueeze(1).unsqueeze(2)
+class MHA(nn.Module):
+    def __init__(self, __C, att, v_size, q_size, k_size, dropout):
+        super(MHA, self).__init__()
+        self.__C = __C
+        self.att = att
+        self.linear_v = nn.Linear(v_size, att['hidden_size_v'] * att['multi_head'])
+        self.linear_k = nn.Linear(k_size, att['hidden_size_k'] * att['multi_head'])
+        self.linear_q = nn.Linear(q_size, att['hidden_size_q'] * att['multi_head'])
+        self.linear_merge = nn.Linear(att['hidden_size_v'] * att['multi_head'], v_size)
+        self.dropout = nn.Dropout(dropout)
+        # The routing block is part of the MHA, as confirmed by the error
+        self.routing_block = SoftRoutingBlock(__C["hidden_size"], __C.get("orders", 4))
 
-
-
-class HardRoutingBlock(nn.Module):
-    def __init__(self, in_channel, out_channel, pooling='attention', reduction=2):
-        super(HardRoutingBlock, self).__init__()
-        self.pooling = pooling
-
-        if pooling == 'avg':
-            self.pool = nn.AdaptiveAvgPool1d(1)
-        elif pooling == 'fc':
-            self.pool = nn.Linear(in_channel, 1)
-
-        self.mlp = nn.Sequential(
-            nn.Linear(in_channel, in_channel // reduction, bias=False),
-            nn.ReLU(inplace=True),
-            nn.Linear(in_channel // reduction, out_channel, bias=True),
-        )
-
-    def forward(self, x, tau, masks):
+    def forward(self, v, k, q, mask, get_alpha=False):
+        n_batches = q.size(0)
+        v_ = self.linear_v(v).view(n_batches, -1, self.att['multi_head'], self.att['hidden_size_v']).transpose(1, 2)
+        k_ = self.linear_k(k).view(n_batches, -1, self.att['multi_head'], self.att['hidden_size_k']).transpose(1, 2)
+        q_ = self.linear_q(q).view(n_batches, -1, self.att['multi_head'], self.att['hidden_size_q']).transpose(1, 2)
         
-        if self.pooling == 'avg':
-            x = x.transpose(1, 2)
-            x = self.pool(x)
-            logits = self.mlp(x.squeeze(-1))
-        elif self.pooling == 'fc':
-            b, _, c = x.size()
-            mask = self.make_mask(x).squeeze(1).squeeze(1).unsqueeze(2)
-            scores = self.pool(x)
-            scores = scores.masked_fill(mask, -1e9)
-            scores = F.softmax(scores, dim=1)
-            _x = x.mul(scores)
-            x = torch.sum(_x, dim=1)
-            logits = self.mlp(x)
+        att_mask = mask
+        alpha = None
 
-        alpha = self.gumbel_softmax(logits, -1, tau)
-        return alpha
+        if get_alpha:
+            masks = getMasks(mask, self.__C)
+            print('DEBUG: k shape before pooling for router:', k.shape)
+            pooled_k = k.mean(1)  # [batch, hidden_size]
+            route, alpha = self.routing_block(pooled_k, self.__C["tau_max"], masks)
+            att_mask = route
 
-    def gumbel_softmax(self, logits, dim=-1, temperature=0.1):
-        '''
-        Use this to replace argmax
-        My input is probability distribution, multiply by 10 to get a value like logits' outputs.
-        '''
-        gumbels = -torch.empty_like(logits).exponential_().log()
-        logits = (logits.log_softmax(dim=dim) + gumbels) / temperature
-        return F.softmax(logits, dim=dim)
-
-    def make_mask(self, feature):
-        return (torch.sum(
-            torch.abs(feature),
-            dim=-1
-        ) == 0).unsqueeze(1).unsqueeze(2)
-
-class mean_Block(nn.Module):
-    """
-    Self-Attention Routing Block
-    """
-
-    def __init__(self, hidden_size, orders):
-        super(mean_Block, self).__init__()
-        self.len = orders
-        self.hidden_size = hidden_size
-
-    def forward(self, x, tau, masks):
-        alpha = (1 / self.len) * torch.ones(x.shape[0], self.len).to(x.device)# (bs, 4)
-        return alpha
-
-class SARoutingBlock(nn.Module):
-    """
-    Self-Attention Routing Block
-    """
-
-    def __init__(self, opt):
-        super(SARoutingBlock, self).__init__()
-        self.opt = opt
-
-        self.linear_v = nn.Linear(opt["hidden_size"], opt["hidden_size"])
-        self.linear_k = nn.Linear(opt["hidden_size"], opt["hidden_size"])
-        self.linear_q = nn.Linear(opt["hidden_size"], opt["hidden_size"])
-        self.linear_merge = nn.Linear(opt["hidden_size"], opt["hidden_size"])
-        if opt["routing"] == 'hard':
-            self.routing_block = HardRoutingBlock(opt["hidden_size"], opt["orders"], opt["pooling"])
-        elif opt["routing"] == 'soft':
-            self.routing_block = SoftRoutingBlock(opt["hidden_size"], opt["orders"], opt["pooling"])
-        elif opt["routing"] == 'mean':
-            self.routing_block = mean_Block(opt["hidden_size"], opt["orders"])
-
-        self.dropout = nn.Dropout(opt["dropout"])
-
-    def forward(self, v, k, q, masks, tau, training):
-        n_batches = q.size(0)
-        x = v
-
-        alphas = self.routing_block(x, tau, masks) # (bs, 4)
-
-        if self.opt["BINARIZE"]:
-            if not training:
-                alphas = self.argmax_binarize(alphas)
-
-        v = self.linear_v(v).view(
-            n_batches,
-            -1,
-            self.opt["multihead"],
-            int(self.opt["hidden_size"] / self.opt["multihead"])
-        ).transpose(1, 2) # (bs, 4, 49, 192)
-
-        k = self.linear_k(k).view(
-            n_batches,
-            -1,
-            self.opt["multihead"],
-            int(self.opt["hidden_size"] / self.opt["multihead"])
-        ).transpose(1, 2) # (bs, 4, 49, 192)
-
-        q = self.linear_q(q).view(
-            n_batches,
-            -1,
-            self.opt["multihead"],
-            int(self.opt["hidden_size"] / self.opt["multihead"])
-        ).transpose(1, 2) # (bs, 4, 49, 192)
-
-        att_list = self.routing_att(v, k, q, masks) # (bs, order_num, head_num, grid_num, grid_num) (bs, 4, 4, 49, 49)
-        att_map = torch.einsum('bl,blcnm->bcnm', alphas, att_list) # (bs, 4), (bs, 4, 4, 49, 49) - > (bs, 4, 49, 49)
-
-        atted = torch.matmul(att_map, v) # (bs, 4, 49, [49]) * (bs, 4, [49],192) - > (bs, 4, 49, 192) mul [49, 49]*[49, 192], 
-
-        atted = atted.transpose(1, 2).contiguous().view(
-            n_batches,
-            -1,
-            self.opt["hidden_size"]
-        ) # (bs, 49, 768)
-
-        atted = self.linear_merge(atted) # (bs, 4, 768)
-
-        return atted
-
-    def routing_att(self, value, key, query, masks):
-        d_k = query.size(-1) # masks [[bs, 1, 1, 49], [bs, 1, 49, 49], [bs, 1, 49, 49], [bs, 1, 49, 49]]
-        scores = torch.matmul(
-            query, key.transpose(-2, -1)
-        ) / math.sqrt(d_k) # (bs, 4, 49, 49) (2, 4, 360, 49)
-        # k q v [4, 4, 49, 192] key (2, 4, 49, 192) query [2, 4, 360, 192]
-        for i in range(len(masks)):
-            mask = masks[i] # (bs, 1, 49, 49)
-            scores_temp = scores.masked_fill(mask, -1e9)
-            att_map = F.softmax(scores_temp, dim=-1)
-            att_map = self.dropout(att_map)
-            if i == 0:
-                att_list = att_map.unsqueeze(1) # (bs, 1, 4, 49, 49)
-            else:
-                att_list = torch.cat((att_list, att_map.unsqueeze(1)), 1)  # (bs, 2, 4, 49, 49) -> (bs, 3, 4, 49, 49)
-
-        return att_list
-
-    def argmax_binarize(self, alphas):
-        n = alphas.size()[0]
-        out = torch.zeros_like(alphas)
-        indexes = alphas.argmax(-1)
-        out[torch.arange(n), indexes] = 1
-        return out
-    
-# ---------------------------
-# ---- Feed Forward Nets ----
-# ---------------------------
-
-class FFN(nn.Module):
-    def __init__(self, opt):
-        super(FFN, self).__init__()
-
-        self.mlp = MLP(
-            input_dim=opt["hidden_size"],
-            hidden_dim=opt["ffn_size"],
-            output_dim=opt["hidden_size"],
-            dropout=opt["dropout"],
-            activation="ReLU"
-        )
-
-    def forward(self, x):
-        return self.mlp(x)
-
-# ------------------------------
-# ---- Multi-Head Attention ----
-# ------------------------------
-
-class MHAtt(nn.Module):
-    def __init__(self, opt):
-        super(MHAtt, self).__init__()
-        self.opt = opt
-
-        self.linear_v = nn.Linear(opt["hidden_size"], opt["hidden_size"])
-        self.linear_k = nn.Linear(opt["hidden_size"], opt["hidden_size"])
-        self.linear_q = nn.Linear(opt["hidden_size"], opt["hidden_size"])
-        self.linear_merge = nn.Linear(opt["hidden_size"], opt["hidden_size"])
-
-        self.dropout = nn.Dropout(opt["dropout"])
-
-    def forward(self, v, k, q, mask):
-        n_batches = q.size(0)
-
-        v = self.linear_v(v).view(
-            n_batches,
-            -1,
-            self.opt["multihead"],
-            int(self.opt["hidden_size"] / self.opt["multihead"])
-        ).transpose(1, 2)
-
-        k = self.linear_k(k).view(
-            n_batches,
-            -1,
-            self.opt["multihead"],
-            int(self.opt["hidden_size"] / self.opt["multihead"])
-        ).transpose(1, 2)
-
-        q = self.linear_q(q).view(
-            n_batches,
-            -1,
-            self.opt["multihead"],
-            int(self.opt["hidden_size"] / self.opt["multihead"])
-        ).transpose(1, 2)
-
-        atted = self.att(v, k, q, mask)
-        atted = atted.transpose(1, 2).contiguous().view(
-            n_batches,
-            -1,
-            self.opt["hidden_size"]
-        )
-
+        atted = self.att_func(v_, k_, q_, att_mask)
+        atted = atted.transpose(1, 2).contiguous().view(n_batches, -1, self.att['hidden_size_v'] * self.att['multi_head'])
         atted = self.linear_merge(atted)
 
+        if get_alpha:
+            return atted, alpha
         return atted
 
-    def att(self, value, key, query, mask):
-        d_k = query.size(-1)
-
-        scores = torch.matmul(
-            query, key.transpose(-2, -1)
-        ) / math.sqrt(d_k)
-
+    def att_func(self, v, k, q, mask):
+        d_k = k.size(-1)
+        scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
         if mask is not None:
-            scores = scores.masked_fill(mask, -1e9)
+            if mask.dtype == torch.bool:
+                scores = scores.masked_fill(mask.unsqueeze(1).expand_as(scores), -1e9)
+            else:
+                # Assume mask is float (soft routing): multiply after softmax
+                att_prob = F.softmax(scores, dim=-1)
+                att_prob = att_prob * mask.unsqueeze(1)
+                att_prob = self.dropout(att_prob)
+                return torch.matmul(att_prob, v)
+        att_prob = F.softmax(scores, dim=-1)
+        att_prob = self.dropout(att_prob)
+        return torch.matmul(att_prob, v)
 
-        att_map = F.softmax(scores, dim=-1)
-        att_map = self.dropout(att_map)
 
-        
+class FFN(nn.Module):
+    def __init__(self, in_size, mid_size, out_size, dropout_r=0., use_relu=True):
+        super(FFN, self).__init__()
+        self.mlp = MLP(
+            input_dim=in_size,
+            hidden_dim=mid_size,
+            output_dim=out_size,
+            dropout=dropout_r,
+            activation="ReLU" if use_relu else None
+        )
+        self.dropout = nn.Dropout(dropout_r)
 
-        return torch.matmul(att_map, value)
-
+    def forward(self, x):
+        return self.dropout(self.mlp(x))
 
 
 class multiTRAR_SA_block(nn.Module):
-    def __init__(self, opt):
+    def __init__(self, __C):
         super(multiTRAR_SA_block, self).__init__()
+        self.__C = __C
+        att_config = {
+            'multi_head': __C['multihead'],
+            'hidden_size_v': __C['hidden_size'] // __C['multihead'],
+            'hidden_size_k': __C['hidden_size'] // __C['multihead'],
+            'hidden_size_q': __C['hidden_size'] // __C['multihead']
+        }
+        self.mhatt1 = MHA(__C, att_config, __C['hidden_size'], __C['hidden_size'], __C['hidden_size'], __C['dropout'])
+        self.mhatt2 = MHA(__C, att_config, __C['hidden_size'], __C['hidden_size'], __C['hidden_size'], __C['dropout'])
+        self.ffn = FFN(__C["hidden_size"], __C["ffn_size"], __C["hidden_size"], __C["dropout"], True)
+        self.norm1 = LayerNorm(__C['hidden_size'])
+        self.norm2 = LayerNorm(__C['hidden_size'])
+        self.norm3 = LayerNorm(__C['hidden_size'])
+        self.dropout1 = nn.Dropout(__C['dropout'])
+        self.dropout2 = nn.Dropout(__C['dropout'])
+        self.dropout3 = nn.Dropout(__C['dropout'])
 
-        self.mhatt1 = SARoutingBlock(opt)
-        self.mhatt2 = MHAtt(opt)
-        self.ffn = FFN(opt)
-
-        self.dropout1 = nn.Dropout(opt["dropout"])
-        self.norm1 = LayerNorm(opt["hidden_size"])
-
-        self.dropout2 = nn.Dropout(opt["dropout"])
-        self.norm2 = LayerNorm(opt["hidden_size"])
-
-        self.dropout3 = nn.Dropout(opt["dropout"])
-        self.norm3 = LayerNorm(opt["hidden_size"])
-
-    def forward(self, x, y, y_masks, x_mask, tau, training): # x (64, 49, 512) y
-
-        x = self.norm1(x + self.dropout1(
-            self.mhatt1(v=y, k=y, q=x, masks=y_masks, tau=tau, training=training)
-        )) # (64, 49, 512) # (bs, 49, 768)
-
-        x = self.norm2(x + self.dropout2(
-            self.mhatt2(v=x, k=x, q=x, mask=x_mask)
-        ))
-
-        x = self.norm3(x + self.dropout3(
-            self.ffn(x)
-        ))
-
-        return x
+    def forward(self, y, x, y_mask, x_mask):
+        y = self.norm1(y + self.dropout1(self.mhatt1(y, y, y, y_mask)))
+        
+        cross_attention_out, alpha = self.mhatt2(x, x, y, x_mask, get_alpha=True)
+        y = self.norm2(y + self.dropout2(cross_attention_out))
+        
+        y = self.norm3(y + self.dropout3(self.ffn(y)))
+        return y, alpha
 
 
+def getMasks(x_mask, __C):
+    b = x_mask.shape[0]
+    n = __C['IMG_SCALE'] * __C['IMG_SCALE']
+    orders = __C.get("orders", 4)
+    return torch.ones(b, orders, n, dtype=torch.bool).to(x_mask.device)
 
-# --------------------------------
-# ---- img Local Window Generator ----
-# --------------------------------
-def getImgMasks(scale=16, order=2):
-    """
-    :param scale: Feature Map Scale
-    :param order: Local Window Size, e.g., order=2 equals to windows size (5, 5)
-    :return: masks = (scale**2, scale**2)
-    """
-    masks = []
-    _scale = scale
-    assert order < _scale, 'order size be smaller than feature map scale'
-
-    for i in range(_scale):
-        for j in range(_scale):
-            mask = np.ones([_scale, _scale], dtype=np.float32)
-            for x in range(i - order, i + order + 1, 1):
-                for y in range(j - order, j + order + 1, 1):
-                    if (0 <= x < _scale) and (0 <= y < _scale):
-                        mask[x][y] = 0
-            mask = np.reshape(mask, [_scale * _scale])
-            masks.append(mask)
-    masks = np.array(masks)
-    masks = np.asarray(masks, dtype=np.bool) # 0, 1 -> False True (True mask)
-    return masks
-
-def getMasks_img_multimodal(x_mask, __C):
-    mask_list = [] # x_mask [64, 1, 1, 49]
-    ORDERS = __C["ORDERS"]
-    for order in ORDERS:
-        if order == 0:
-            mask_list.append(x_mask)
-        else:
-            mask_img = torch.from_numpy(getImgMasks(__C["IMG_SCALE"], order)).byte().to(x_mask.device) # (49, 49)
-            mask = torch.concat([mask_img]*(__C["len"]//(__C["IMG_SCALE"]*__C["IMG_SCALE"])), dim=0) 
-            mask = torch.concat([mask, mask_img[:(__C["len"]%(__C["IMG_SCALE"]*__C["IMG_SCALE"])),:]])
-            mask = torch.logical_or(x_mask, mask) # (64, 1, max_len, grid_num)
-            mask_list.append(mask)
-    return mask_list 
 
 class DynRT_ED(nn.Module):
     def __init__(self, opt):
         super(DynRT_ED, self).__init__()
         self.opt = opt
-        self.tau = opt["tau_max"]
-        opt_list = []
-        for i in range(opt["layer"]):
-            opt_copy = copy.deepcopy(opt)
-            opt_copy["ORDERS"] = opt["ORDERS"][:len(opt["ORDERS"])-i]
-            opt_copy["orders"] = len(opt["ORDERS"])-i
-            opt_list.append(copy.deepcopy(opt_copy))
-        self.dec_list = nn.ModuleList([multiTRAR_SA_block(opt_list[-(i+1)]) for i in range(opt["layer"])])
+        self.dec_list = nn.ModuleList([
+            multiTRAR_SA_block(self._get_layer_opt(opt, i))
+            for i in range(opt['layer'])
+        ])
+
+    def _get_layer_opt(self, opt, i):
+        layer_opt = copy.deepcopy(opt)
+        if 'ORDERS' in opt:
+            layer_opt['orders'] = opt['ORDERS'][i]
+        return layer_opt
 
     def forward(self, y, x, y_mask, x_mask):
-        # y text (bs, max_len, dim) x img (bs, gird_num, dim) y_mask (bs, 1, 1, max_len) x_mask (bs, 1, 1, grid_num)
-        x_masks = getMasks_img_multimodal(x_mask, self.opt)
-        # Input encoder last hidden vector
-        # And obtain decoder last hidden vectors
-        for i, dec in enumerate(self.dec_list):
-            y = dec(y, x, x_masks[:i+1], y_mask, self.tau, self.training) # (4, 360, 768)
-        return y, x
-
-    def set_tau(self, tau):
-        self.tau = tau
+        all_alphas = []
+        for i in range(self.opt['layer']):
+            y, alpha = self.dec_list[i](y, x, y_mask, x_mask)
+            all_alphas.append(alpha)
+        return y, x, all_alphas
