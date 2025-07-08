@@ -93,7 +93,7 @@ def extract_alphas(opt):
         })
         
     print(f"Processed {processed} samples.")
-    output_filename = 'router_output_vectors.json'
+    output_filename = 'router_output_vectors_tau(0.1).json'
     with open(output_filename, 'w') as f:
         json.dump(results, f, indent=4)
         
